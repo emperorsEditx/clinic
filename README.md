@@ -77,7 +77,7 @@ DB_CONNECTION=mysql DB_DATABASE=clinic_test php artisan test   # against MySQL
 vendor/bin/pint --test            # code style
 ```
 
-58 feature tests cover authentication, role restrictions, patient IDs and duplicates, search, visits and
+70 tests (58 feature, 12 unit) cover authentication, role restrictions, patient IDs and duplicates, search, visits and
 consultations, amendment history, prescriptions and versioning, duration calculations, repeat authorisation,
 lab uploads and file validation, private file access, and a smoke test that renders every screen for every role.
 

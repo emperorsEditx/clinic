@@ -64,10 +64,12 @@ All schema lives in `database/migrations/2026_01_01_*`. Changes this session: no
 - Dashboard "today" counts were wrong on SQLite: date-only `whereBetween` compared against datetime strings.
 - Medicine autocomplete never opened: the JS `debounce` helper dropped `this`.
 - Change log hid the removal reason when a snapshot was present.
+- Blank `BACKUP_NOTIFY_EMAIL` in the env template crashed the app on boot.
+- Vitals displayed "mmHg" twice.
 
 ## Testing status
 
-- 58 feature tests, passing on SQLite and MariaDB 10.11 locally; CI runs them on MySQL 8.0.
+- 70 tests (58 feature + 12 unit), passing on SQLite and MariaDB 10.11 locally; CI runs them on MySQL 8.0.
 - `PageSmokeTest` renders every page for all four roles against demo data and asserts no 5xx, plus a role/URL matrix.
 - Browser check (headless Chrome): doctor flow from waiting room → consultation → catalogue medicine search →
   lab request → completion, desktop and mobile, no console errors.

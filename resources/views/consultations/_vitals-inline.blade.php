@@ -1,6 +1,6 @@
 @php
     $parts = array_filter([
-        $v->bloodPressure() ? 'BP '.$v->bloodPressure().' mmHg' : null,
+        $v->bloodPressure() ? 'BP '.$v->bloodPressure() : null,
         $v->pulse_rate ? 'Pulse '.$v->pulse_rate.' bpm' : null,
         $v->temperature ? 'Temp '.$v->temperature.' °C' : null,
         $v->respiratory_rate ? 'RR '.$v->respiratory_rate.'/min' : null,
