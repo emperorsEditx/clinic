@@ -33,9 +33,17 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false, // medical files are only streamed through authorised controller routes
             'throw' => false,
             'report' => false,
+        ],
+
+        // Backup archives (database dump + storage/app). Mount this path on a separate volume in production.
+        'backups' => [
+            'driver' => 'local',
+            'root' => env('BACKUP_PATH', storage_path('backups')),
+            'serve' => false,
+            'throw' => false,
         ],
 
         'public' => [

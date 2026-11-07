@@ -1,0 +1,185 @@
+name: CI / CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (PHP 8.3 · MySQL 8)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: clinic_test
+          MYSQL_USER: clinic
+          MYSQL_PASSWORD: secret
+          MYSQL_ROOT_PASSWORD: root
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: clinic_test
+      DB_USERNAME: clinic
+      DB_PASSWORD: secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_mysql, gd, intl, bcmath, zip, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - run: composer install --no-interaction --no-progress --prefer-dist
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run build
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Code style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Run test suite on MySQL
+        run: php artisan test
+
+      - name: Migrations roll back cleanly
+        run: php artisan migrate:fresh --force && php artisan migrate:rollback --force
+
+  image:
+    name: Build & push image
+    needs: tests
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: vars
+        run: |
+          echo "tag=sha-${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: APP_VERSION=${{ steps.vars.outputs.tag }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.vars.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: image
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    env:
+      SSH_HOST: ${{ secrets.VPS_HOST }}
+      SSH_USER: ${{ secrets.VPS_USER }}
+      SSH_PORT: ${{ secrets.VPS_PORT || '22' }}
+      SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/apps/clinic' }}
+      TAG: ${{ needs.image.outputs.tag }}
+    steps:
+      - name: Check deployment secrets
+        id: guard
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_KEY" ]; then
+            echo "::warning::Skipping deploy: set VPS_HOST, VPS_USER and VPS_SSH_KEY in the 'production' environment (see README › Deployment)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.ready == 'true'
+
+      - name: Configure SSH
+        if: steps.guard.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSH=ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o BatchMode=yes $SSH_USER@$SSH_HOST" >> "$GITHUB_ENV"
+
+      - name: Upload compose file
+        if: steps.guard.outputs.ready == 'true'
+        run: |
+          $SSH "mkdir -p '$DEPLOY_PATH'"
+          $SSH "cat > '$DEPLOY_PATH/docker-compose.yml'" < docker-compose.prod.yml
+
+      - name: Pull, migrate, switch
+        if: steps.guard.outputs.ready == 'true'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          $SSH "DEPLOY_PATH='$DEPLOY_PATH' TAG='$TAG' IMAGE='$IMAGE' GHCR_USER='$GHCR_USER' GHCR_TOKEN='$GHCR_TOKEN' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          if [ ! -f .env ]; then
+            echo "::error::$DEPLOY_PATH/.env is missing. Create it from .env.production.example first."; exit 1
+          fi
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+          export CLINIC_IMAGE="$IMAGE" IMAGE_TAG="$TAG"
+
+          docker compose pull --quiet
+          # Back up before schema changes when a previous release is running.
+          if docker compose ps --status running --services | grep -qx app; then
+            docker compose exec -T app php artisan backup:run --only-db --disable-notifications || echo "warning: pre-deploy backup failed"
+          fi
+          docker compose run --rm --no-deps -e AUTORUN_ENABLED=false app php artisan migrate --force
+          docker compose up -d --remove-orphans
+          docker compose exec -T app php artisan queue:restart || true
+
+          for i in $(seq 1 30); do
+            if docker compose exec -T app php -r 'exit(@file_get_contents("http://127.0.0.1:8080/up") === false ? 1 : 0);'; then
+              echo "Deployed $IMAGE:$TAG"; docker image prune -f >/dev/null; exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::Health check failed"; docker compose logs --tail=80 app; exit 1
+          REMOTE

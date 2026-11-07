@@ -3,23 +3,29 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * Production-safe seeding: roles/permissions, reference catalogues and the first administrator.
+ * Demo data lives in DemoSeeder and is never run automatically.
+ */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([RolesAndPermissionsSeeder::class, LaboratoryTestSeeder::class]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $email = env('ADMIN_EMAIL');
+        $password = env('ADMIN_PASSWORD');
+        if ($email && $password && ! User::withTrashed()->where('email', $email)->exists()) {
+            $admin = User::query()->create([
+                'name' => env('ADMIN_NAME', 'Clinic Administrator'),
+                'email' => $email,
+                'password' => $password,
+                'is_active' => true,
+            ]);
+            $admin->assignRole(User::ROLE_ADMIN);
+            $this->command?->info("Administrator {$email} created.");
+        }
     }
 }

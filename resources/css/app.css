@@ -1,9 +1,83 @@
+@import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views';
+@source '../js';
+@source '../../app/Enums';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --color-brand-50: #effbf9;
+    --color-brand-100: #d5f3ee;
+    --color-brand-200: #aee6dd;
+    --color-brand-300: #78d1c6;
+    --color-brand-400: #43b4a9;
+    --color-brand-500: #26988e;
+    --color-brand-600: #1b7a73;
+    --color-brand-700: #1a625d;
+    --color-brand-800: #194f4c;
+    --color-brand-900: #184240;
+}
+
+@layer base {
+    html { -webkit-font-smoothing: antialiased; }
+    body { @apply bg-slate-50 text-slate-800 text-sm; }
+    [x-cloak] { display: none !important; }
+    :focus-visible { @apply outline-2 outline-offset-2 outline-brand-500; }
+}
+
+@layer components {
+    .card { @apply bg-white rounded-xl border border-slate-200/80 shadow-[0_1px_2px_rgba(15,23,42,0.04)]; }
+    .card-header { @apply flex items-center justify-between gap-3 px-5 py-3.5 border-b border-slate-100; }
+    .card-title { @apply text-[13px] font-semibold text-slate-900 tracking-tight; }
+    .card-body { @apply p-5; }
+
+    .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap; }
+    .btn-sm { @apply px-2.5 py-1.5 text-xs; }
+    .btn-primary { @apply bg-brand-600 text-white hover:bg-brand-700 shadow-sm; }
+    .btn-secondary { @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 shadow-sm; }
+    .btn-ghost { @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900; }
+    .btn-danger { @apply bg-red-600 text-white hover:bg-red-700 shadow-sm; }
+    .btn-danger-ghost { @apply text-red-600 hover:bg-red-50; }
+
+    .label { @apply block text-[13px] font-medium text-slate-700 mb-1; }
+    .input { @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500; }
+    .input-error { @apply border-red-400 focus:border-red-500 focus:ring-red-500/20; }
+    .help { @apply mt-1 text-xs text-slate-500; }
+    .error { @apply mt-1 text-xs text-red-600; }
+
+    .table { @apply w-full text-left text-[13px]; }
+    .table thead th { @apply bg-slate-50/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 border-b border-slate-200; }
+    .table tbody td { @apply px-4 py-3 border-b border-slate-100 align-top; }
+    .table tbody tr:last-child td { @apply border-b-0; }
+    .table tbody tr.row-link { @apply hover:bg-slate-50 cursor-pointer; }
+
+    .badge { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset whitespace-nowrap; }
+    .badge-slate { @apply bg-slate-50 text-slate-600 ring-slate-500/20; }
+    .badge-blue { @apply bg-blue-50 text-blue-700 ring-blue-600/20; }
+    .badge-indigo { @apply bg-indigo-50 text-indigo-700 ring-indigo-600/20; }
+    .badge-green { @apply bg-emerald-50 text-emerald-700 ring-emerald-600/20; }
+    .badge-amber { @apply bg-amber-50 text-amber-800 ring-amber-600/25; }
+    .badge-red { @apply bg-red-50 text-red-700 ring-red-600/20; }
+    .badge-teal { @apply bg-brand-50 text-brand-700 ring-brand-600/20; }
+    .badge-orange { @apply bg-orange-50 text-orange-700 ring-orange-600/20; }
+    .badge-rose { @apply bg-rose-50 text-rose-700 ring-rose-600/20; }
+
+    .dl { @apply grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-4 gap-y-2 text-[13px]; }
+    .dl dt { @apply text-slate-500; }
+    .dl dd { @apply text-slate-900 break-words; }
+
+    .tab { @apply whitespace-nowrap border-b-2 px-1 pb-3 text-[13px] font-medium transition-colors; }
+    .tab-active { @apply border-brand-600 text-brand-700; }
+    .tab-inactive { @apply border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300; }
+
+    .prose-clinical { @apply whitespace-pre-line text-[13px] leading-relaxed text-slate-800; }
+}
+
+@media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+    .card { box-shadow: none; border-color: #e2e8f0; }
 }
