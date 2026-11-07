@@ -138,7 +138,7 @@ class VisitConsultationTest extends TestCase
         $this->assertSame('Corrected diagnosis', $c->diagnosis);
         $this->assertSame(1, $c->amendment_count);
         $am = $c->amendments()->sole();
-        $this->assertSame(['old' => 'Original diagnosis', 'new' => 'Corrected diagnosis'], $am->changes['diagnosis']);
+        $this->assertEquals(['old' => 'Original diagnosis', 'new' => 'Corrected diagnosis'], $am->changes['diagnosis']); // MySQL JSON reorders keys
         $this->assertDatabaseHas('activity_logs', ['action' => 'amended', 'entity_type' => 'consultation', 'entity_id' => $c->id]);
 
         // Another doctor cannot amend
