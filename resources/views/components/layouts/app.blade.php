@@ -41,12 +41,8 @@
 
 <aside class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform lg:translate-x-0 no-print" :class="sidebar && 'translate-x-0'" aria-label="Main navigation">
     <div class="flex h-16 items-center gap-3 border-b border-slate-100 px-5">
-        @if ($logo)
-            <img src="{{ $logo }}" alt="" class="size-8 rounded-md object-contain">
-        @else
-            <div class="flex size-8 items-center justify-center rounded-lg bg-brand-600 text-white"><x-icon name="heart" class="size-4.5" /></div>
-        @endif
-        <div class="min-w-0"><p class="truncate text-[13px] font-semibold text-slate-900">{{ settings('clinic_name') }}</p><p class="text-[11px] text-slate-500">Clinic Management</p></div>
+        <img src="{{ $logo }}" alt="" class="size-8 rounded-md object-contain">
+        <div class="min-w-0"><p class="truncate text-[13px] font-semibold text-slate-900">{{ settings('clinic_name') }}</p><p class="text-[11px] text-slate-500">Homoeopathic</p></div>
     </div>
     <nav class="flex-1 overflow-y-auto px-3 py-4">
         <ul class="space-y-0.5">

@@ -6,13 +6,13 @@
     </x-page-header>
 
     <div class="card">
-        <form method="GET" class="grid grid-cols-1 gap-3 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-6" aria-label="Filter patients">
-            <div class="lg:col-span-2"><label class="label" for="q">Search</label><input id="q" name="q" value="{{ $filters['q'] ?? '' }}" class="input" placeholder="Name, patient ID or phone"></div>
+        <form method="GET" class="grid grid-cols-1 gap-3 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-8 xl:grid-cols-9" aria-label="Filter patients">
+            <div class="lg:col-span-2 xl:col-span-3"><label class="label" for="q">Search</label><input id="q" name="q" value="{{ $filters['q'] ?? '' }}" class="input" placeholder="Name, patient ID or phone"></div>
             <x-field name="gender" label="Gender" type="select" :options="App\Enums\Gender::options()" :value="$filters['gender'] ?? null" empty="Any" />
             <x-field name="doctor" label="Seen by doctor" type="select" :options="$doctors->pluck('name', 'id')" :value="$filters['doctor'] ?? null" empty="Any" />
-            <div><label class="label">Registered between</label><div class="flex gap-1"><input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="input px-2" aria-label="Registered from"><input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="input px-2" aria-label="Registered to"></div></div>
-            <div><label class="label">Visited between</label><div class="flex gap-1"><input type="date" name="visit_from" value="{{ $filters['visit_from'] ?? '' }}" class="input px-2" aria-label="Visit from"><input type="date" name="visit_to" value="{{ $filters['visit_to'] ?? '' }}" class="input px-2" aria-label="Visit to"></div></div>
-            <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-6">
+            <div class="min-w-0 lg:col-span-2"><label class="label">Registered between</label><div class="grid min-w-0 grid-cols-2 gap-1"><input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="input min-w-0 px-2" aria-label="Registered from"><input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="input min-w-0 px-2" aria-label="Registered to"></div></div>
+            <div class="min-w-0 lg:col-span-2"><label class="label">Visited between</label><div class="grid min-w-0 grid-cols-2 gap-1"><input type="date" name="visit_from" value="{{ $filters['visit_from'] ?? '' }}" class="input min-w-0 px-2" aria-label="Visit from"><input type="date" name="visit_to" value="{{ $filters['visit_to'] ?? '' }}" class="input min-w-0 px-2" aria-label="Visit to"></div></div>
+            <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-8 xl:col-span-9">
                 <button class="btn btn-secondary"><x-icon name="funnel" /> Apply filters</button>
                 @if (array_filter($filters))<a href="{{ route('patients.index') }}" class="btn btn-ghost">Reset</a>@endif
                 @can('patients.delete')

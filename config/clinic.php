@@ -8,7 +8,7 @@
 
 return [
     'settings_defaults' => [
-        'clinic_name' => env('CLINIC_NAME', 'My Clinic'),
+        'clinic_name' => env('CLINIC_NAME', 'Silver Line'),
         'clinic_logo' => null,
         'clinic_address' => null,
         'clinic_phone' => null,

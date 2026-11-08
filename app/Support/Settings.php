@@ -14,6 +14,7 @@ use Throwable;
 class Settings
 {
     private const CACHE_KEY = 'clinic_settings.all';
+    private const DEFAULT_LOGO = 'assets/images/silver-line-logo.jpeg';
 
     /** @var array<string, mixed>|null */
     private ?array $loaded = null;
@@ -74,19 +75,24 @@ class Settings
         return $logo && Storage::disk('public')->exists($logo) ? Storage::disk('public')->path($logo) : null;
     }
 
+    public function hasCustomLogo(): bool
+    {
+        return $this->logoPath() !== null;
+    }
+
     public function logoUrl(): ?string
     {
         $logo = $this->get('clinic_logo');
 
-        return $logo && Storage::disk('public')->exists($logo) ? Storage::disk('public')->url($logo) : null;
+        return $logo && Storage::disk('public')->exists($logo)
+            ? Storage::disk('public')->url($logo)
+            : asset(self::DEFAULT_LOGO);
     }
 
     public function logoDataUri(): ?string
     {
-        $path = $this->logoPath();
-        if (! $path) {
-            return null;
-        }
+        $path = $this->logoPath() ?? public_path(self::DEFAULT_LOGO);
+
         $mime = mime_content_type($path) ?: 'image/png';
 
         return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));

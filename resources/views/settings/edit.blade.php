@@ -1,5 +1,6 @@
 @php
     $logo = settings()->logoUrl();
+    $hasCustomLogo = settings()->hasCustomLogo();
     $zones = collect(timezone_identifiers_list())->mapWithKeys(fn ($z) => [$z => $z]);
 @endphp
 <x-layouts.app title="Settings">
@@ -27,7 +28,7 @@
                     </div>
                     <p class="help">PNG or JPG, up to 1 MB.</p>
                     @error('clinic_logo')<p class="error">{{ $message }}</p>@enderror
-                    @if ($logo)<label class="mt-2 flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" name="remove_logo" value="1" class="rounded border-slate-300"> Remove current logo</label>@endif
+                    @if ($hasCustomLogo)<label class="mt-2 flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" name="remove_logo" value="1" class="rounded border-slate-300"> Remove current logo</label>@endif
                 </div>
             </div>
         </section>

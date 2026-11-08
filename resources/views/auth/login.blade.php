@@ -1,11 +1,7 @@
 <x-layouts.guest title="Sign in">
     <div class="w-full max-w-sm">
         <div class="mb-8 text-center">
-            @if ($logo = settings()->logoUrl())
-                <img src="{{ $logo }}" alt="{{ settings('clinic_name') }}" class="mx-auto mb-4 h-12 object-contain">
-            @else
-                <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-brand-600 text-white"><x-icon name="heart" class="size-6" /></div>
-            @endif
+            <img src="{{ settings()->logoUrl() }}" alt="{{ settings('clinic_name') }}" class="mx-auto mb-4 h-12 object-contain">
             <h1 class="text-xl font-semibold tracking-tight text-slate-900">{{ settings('clinic_name') }}</h1>
             <p class="mt-1 text-[13px] text-slate-500">Sign in to the clinic management system</p>
         </div>
